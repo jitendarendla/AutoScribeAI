@@ -622,26 +622,7 @@ export default function AppDashboard() {
               )}
             </ScrollArea>
 
-            {/* Stats footer */}
-            {stats && sidebarSection === "chats" && (
-              <div className="px-4 py-3 border-t border-white/10">
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="bg-white/5 rounded p-2 text-center">
-                    <div className="text-muted-foreground">Chats</div>
-                    <div className="text-base font-semibold">{stats.totalChats}</div>
-                  </div>
-                  <div className="bg-white/5 rounded p-2 text-center">
-                    <div className="text-muted-foreground">Saved</div>
-                    <div className="text-base font-semibold">{stats.totalSaved}</div>
-                  </div>
-                  <div className="bg-white/5 rounded p-2 text-center">
-                    <div className="text-muted-foreground">Messages</div>
-                    <div className="text-base font-semibold">{stats.totalMessages}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
+           
             {/* Theme toggle + collapse */}
             <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
@@ -794,250 +775,64 @@ export default function AppDashboard() {
           </div>
         </ScrollArea>
 
-        {/* INPUT AREA */}
-        <div className="p-4 bg-gradient-to-t from-background via-background/95 to-transparent absolute bottom-0 left-0 right-0 z-10">
-          <div className="max-w-4xl mx-auto relative">
-            {uploadedFile && (
-              <div className="absolute -top-10 left-2 flex items-center gap-2 bg-secondary/20 text-secondary border border-secondary/30 px-3 py-1.5 rounded-full text-xs backdrop-blur-md shadow-lg">
-                <FileText className="w-3 h-3" />
-                <span className="truncate max-w-[200px] font-medium">{uploadedFile.name}</span>
-                <button onClick={() => setUploadedFile(null)} className="hover:text-foreground ml-1">
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            )}
+              {/* INPUT AREA */}
+              <div className="p-4 bg-gradient-to-t from-background via-background/95 to-transparent absolute bottom-0 left-0 right-0 z-10">
+                <div className="max-w-4xl mx-auto relative">
 
-            <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 scrollbar-none">
-              {[
-                "Summarize",
-                "Explain",
-                "Generate Code",
-                "Extract Keywords",
-                "Create Structured Report",
-                "Convert to Documentation",
-              ].map(action => (
-                <Button
-                  key={action}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs rounded-full bg-black/40 border-white/10 whitespace-nowrap hover:bg-primary/20 hover:text-primary transition-colors backdrop-blur-md"
-                  onClick={() => {
-                    if (action === "Create Structured Report") {
-                      setCurrentMode("Report");
-                      setInputPrompt(inputPrompt || "Create a structured report about: ");
-                    } else if (action === "Convert to Documentation") {
-                      setCurrentMode("Documentation");
-                      setInputPrompt(inputPrompt || "Create documentation for: ");
-                    } else {
-                      setInputPrompt(action + ": ");
-                    }
-                  }}
-                >
-                  {action}
-                </Button>
-              ))}
-            </div>
-
-            <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden focus-within:ring-1 focus-within:ring-primary/50 transition-all p-1">
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept=".txt,.csv"
-                onChange={handleFileUpload}
-              />
-              <Button
-                variant="ghost" size="icon"
-                className="h-12 w-12 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={generate.isPending || uploadFile.isPending}
-              >
-                {uploadFile.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
-              </Button>
-
-              <Input
-                value={inputPrompt}
-                onChange={e => setInputPrompt(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                placeholder="Type your prompt..."
-                className="border-0 bg-transparent focus-visible:ring-0 px-2 shadow-none h-12 text-base"
-                disabled={generate.isPending}
-              />
-
-              <Button
-                variant="ghost" size="icon"
-                className={cn("h-12 w-12 rounded-xl transition-colors", isListening ? "bg-destructive/20 text-destructive" : "text-muted-foreground hover:text-foreground hover:bg-white/5")}
-                onClick={isListening ? stopListening : startListening}
-                disabled={generate.isPending}
-              >
-                {isListening ? <Mic className="w-5 h-5 animate-pulse" /> : <MicOff className="w-5 h-5" />}
-              </Button>
-
-              <Button
-                onClick={() => handleSend()}
-                disabled={(!inputPrompt.trim() && !uploadedFile) || generate.isPending}
-                className="h-12 px-6 ml-1 rounded-xl font-medium shadow-lg shadow-primary/20"
-              >
-                {generate.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 mr-2" />Send</>}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT INSIGHTS PANEL */}
-      <div className="w-80 border-l border-white/10 bg-black/20 backdrop-blur-xl hidden xl:flex flex-col flex-shrink-0 z-10 p-5 space-y-6">
-        {lastKeywords.length > 0 && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-primary" /> Extracted Concepts
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {lastKeywords.map(k => (
-                <Badge key={k} variant="outline" className="bg-white/5 border-white/10 text-xs py-1 px-2 hover:bg-primary/10 transition-colors cursor-pointer" onClick={() => setInputPrompt(`Tell me more about ${k}`)}>
-                  {k}
-                </Badge>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {lastSuggestions.length > 0 && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Smart Actions</h3>
-            <div className="space-y-2">
-              {lastSuggestions.map(s => (
-                <div
-                  key={s}
-                  onClick={() => handleSend(s)}
-                  className="p-3 rounded-xl border border-white/10 bg-white/5 text-sm text-muted-foreground hover:text-foreground hover:bg-white/10 hover:border-white/20 cursor-pointer transition-all"
-                >
-                  {s}
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {stats && stats.modeBreakdown.length > 0 && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Usage Breakdown</h3>
-            <div className="space-y-3 p-4 rounded-xl bg-black/40 border border-white/10">
-              {stats.modeBreakdown.map(mb => {
-                const percentage = stats.totalChats > 0 ? (mb.count / stats.totalChats) * 100 : 0;
-                return (
-                  <div key={mb.mode} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span className="capitalize">{mb.mode}</span>
-                      <span className="text-muted-foreground">{mb.count}</span>
+                  {uploadedFile && (
+                    <div className="absolute -top-10 left-2 flex items-center gap-2 bg-secondary/20 border px-3 py-1.5 rounded-full text-xs">
+                      <FileText className="w-3 h-3" />
+                      <span className="truncate max-w-[200px]">{uploadedFile.name}</span>
+                      <button onClick={() => setUploadedFile(null)}>
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className="h-full bg-primary"
-                      />
-                    </div>
+                  )}
+
+                  <div className="flex items-center bg-black/60 border border-white/10 rounded-2xl p-1">
+
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
+
+                    <Button onClick={() => fileInputRef.current?.click()}>
+                      <Paperclip className="w-4 h-4" />
+                    </Button>
+
+                    <Input
+                      value={inputPrompt}
+                      onChange={e => setInputPrompt(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      placeholder="Type your prompt..."
+                      className="flex-1 bg-transparent border-0"
+                    />
+
+                    <Button onClick={() => handleSend()}>
+                      {generate.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Send
+                        </>
+                      )}
+                    </Button>
+
                   </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
+                </div>
+              </div>
 
-        <div className="mt-auto pt-4">
-          <Button
-            variant="outline"
-            className="w-full bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 justify-center gap-2 h-12 rounded-xl"
-            onClick={() => {
-              const latestAiMsg = currentChat?.messages.filter(m => m.role === "ai").pop();
-              if (latestAiMsg) {
-                const parsed = parseAiContent(latestAiMsg.content);
-                handleShare(parsed.report);
-              } else {
-                toast.error("No output to share yet");
+              {/* CLOSE MAIN + ROOT */}
+              </div>
+              </div>
+
+              );
               }
-            }}
-          >
-            <Share2 className="w-4 h-4" />
-            Generate Share Link
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AiMessageContent({
-  content, keywords, mode, onSave, onShare, onDownload
-}: {
-  content: string;
-  keywords: string;
-  mode: string;
-  onSave: (c: string) => void;
-  onShare: (c: string) => void;
-  onDownload: (c: string) => void;
-}) {
-  const parsed = parseAiContent(content);
-
-  return (
-    <div className="space-y-4">
-      <Tabs defaultValue="report" className="w-full">
-        <TabsList className="bg-black/20 border border-white/10 mb-4 h-9">
-          <TabsTrigger value="report" className="text-xs h-7 data-[state=active]:bg-primary/20">Report</TabsTrigger>
-          <TabsTrigger value="code" className="text-xs h-7 data-[state=active]:bg-primary/20">Code</TabsTrigger>
-          <TabsTrigger value="docs" className="text-xs h-7 data-[state=active]:bg-primary/20">Docs</TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs h-7 data-[state=active]:bg-primary/20">Insights</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="report" className="mt-0 outline-none">
-          <StructuredMarkdown content={parsed.report} />
-        </TabsContent>
-
-        <TabsContent value="code" className="mt-0 outline-none">
-          <CodeOutput content={parsed.code} />
-        </TabsContent>
-
-        <TabsContent value="docs" className="mt-0 outline-none">
-          <div className="border-l-2 border-primary/50 pl-4">
-            <StructuredMarkdown content={parsed.docs} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="insights" className="mt-0 outline-none">
-          <InsightsOutput content={parsed.insights} keywords={keywords} />
-        </TabsContent>
-      </Tabs>
-
-      {keywords && (
-        <div className="flex flex-wrap gap-2 pt-4 mt-2 border-t border-white/10">
-          {keywords.split(",").map(k => (
-            <Badge key={k} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-default">
-              {k.trim()}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 pt-2 flex-wrap">
-        <Button variant="outline" size="sm" className="h-8 text-xs gap-1 bg-white/5 border-white/10"
-          onClick={() => { navigator.clipboard.writeText(parsed.report); toast.success("Copied!"); }}>
-          <Copy className="w-3 h-3" /> Copy
-        </Button>
-        <Button variant="outline" size="sm" className="h-8 text-xs gap-1 bg-white/5 border-white/10"
-          onClick={() => onDownload(parsed.report)}>
-          <Download className="w-3 h-3" /> Download
-        </Button>
-        <Button variant="outline" size="sm" className="h-8 text-xs gap-1 bg-white/5 border-white/10"
-          onClick={() => onSave(parsed.report)}>
-          <Save className="w-3 h-3" /> Save
-        </Button>
-        <Button variant="outline" size="sm" className="h-8 text-xs gap-1 bg-white/5 border-white/10"
-          onClick={() => onShare(parsed.report)}>
-          <Share2 className="w-3 h-3" /> Share
-        </Button>
-      </div>
-    </div>
-  );
-}
