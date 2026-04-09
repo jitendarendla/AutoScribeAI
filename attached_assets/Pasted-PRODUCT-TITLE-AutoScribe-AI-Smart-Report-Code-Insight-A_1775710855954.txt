@@ -1,0 +1,179 @@
+PRODUCT TITLE
+
+AutoScribe AI+ — Smart Report, Code & Insight Assistant
+
+🎯 PRODUCT VISION
+
+A next-gen AI assistant that not only generates text like ChatGPT, but also:
+
+Structures outputs
+Understands files
+Gives insights
+Supports multiple modes
+Feels like a complete productivity tool
+💎 CORE IDEA (VERY IMPORTANT)
+
+“Not just chat… but a smart workspace where users input anything and get structured, meaningful, multi-format outputs.”
+
+🧭 COMPLETE USER FLOW (VISUALIZE THIS)
+🔹 1. LOGIN PAGE
+Email + password login
+“Continue as Guest” option (important for demo)
+
+👉 After login → redirect to dashboard
+
+🔹 2. DASHBOARD (MAIN APP)
+
+Layout similar to ChatGPT + extra panels:
+
+LEFT SIDEBAR:
+➕ New Chat
+🕘 History
+⭐ Saved Outputs
+📁 Uploaded Files
+⚙ Settings
+MAIN SCREEN (CENTER):
+Chat Interface:
+Chat bubbles (user + AI)
+Input box:
+Text input
+Upload file button
+Voice input button 🎤
+RIGHT PANEL (UNIQUE FEATURE 🔥):
+
+Dynamic panel showing:
+
+📊 Insights
+📌 Keywords
+📈 Mini charts
+🧩 CORE FEATURES (SMART + EASY TO BUILD)
+🔹 1. MULTI-MODE AI SYSTEM (VERY IMPORTANT)
+
+Dropdown above input:
+
+📝 Report Mode
+💻 Code Mode
+📘 Documentation Mode
+📊 Insight Mode
+
+👉 Same input → different output style
+
+🔹 2. FILE UPLOAD (EASY VERSION)
+
+Supports:
+
+TXT
+CSV
+
+👉 Flow:
+
+User uploads file
+Backend reads content
+Sends to AI
+🔹 3. VOICE TO TEXT (SIMPLE)
+Use browser API (no backend needed)
+Convert speech → text
+Fill input box
+🔹 4. OUTPUT TABS
+
+After response:
+
+📄 Report
+💻 Code
+📘 Docs
+📊 Insights
+🔹 5. COPY + EXPORT
+Copy button
+Download as TXT
+🔹 6. SMART SUGGESTIONS (VERY EASY + IMPRESSIVE)
+
+After output, show:
+
+“Try summarizing this”
+“Generate code from this”
+“Explain this”
+
+👉 Just buttons triggering new API calls
+
+🔹 7. QUICK ACTION BUTTONS
+
+Below input:
+
+Summarize
+Explain
+Generate Code
+Extract Keywords
+🔹 8. KEYWORD HIGHLIGHTING
+Highlight important words in output
+👉 (simple JS logic)
+🔹 9. CHAT HISTORY + SAVE
+Store chats in DB
+Allow rename
+Save important outputs
+🔹 10. SHARE LINK (SUPER FEATURE, EASY)
+Generate unique link
+Show output publicly
+
+👉 Just store data + route
+
+🔹 11. LIGHT / DARK MODE
+Toggle button
+🔹 12. LOADING ANIMATION (IMPORTANT)
+Show “Thinking…”
+👉 Makes app feel advanced
+🧠 AI WORKFLOW
+🔹 STEP 1: INPUT
+Text / File / Voice
+🔹 STEP 2: PREPROCESSING
+Clean text
+Extract content
+🔹 STEP 3: UNDERSTANDING
+
+Using:
+
+BERT
+🔹 STEP 4: GENERATION
+Reports → T5
+Code → CodeT5
+OR fallback → API (OpenAI / Gemini)
+🔹 STEP 5: OUTPUT STRUCTURING
+Divide into sections
+Add formatting
+⚙️ BACKEND STRUCTURE
+
+Use:
+
+FastAPI
+APIs:
+/generate
+
+Input → text + mode
+Output → structured result
+
+/upload
+
+File upload
+
+/history
+
+Get/save chats
+
+🗄️ DATABASE (SQLite)
+users
+chats
+saved_outputs
+files
+💻 FRONTEND (React + Tailwind)
+COMPONENTS:
+Sidebar
+ChatWindow
+InputBox
+FileUpload
+OutputTabs
+RightPanel
+🎨 UI DESIGN (VERY IMPORTANT)
+Dark theme default
+Glass effect cards
+Smooth scroll
+Rounded UI
+Chat bubbles like ChatGPT

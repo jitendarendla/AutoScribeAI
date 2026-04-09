@@ -1,22 +1,32 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AutoScribe AI+ API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: chats
+    description: Chat session operations
+  - name: messages
+    description: Chat message operations
+  - name: saved
+    description: Saved outputs
+  - name: files
+    description: File upload and management
+  - name: share
+    description: Share link operations
+  - name: ai
+    description: AI generation operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +34,265 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /chats:
+    get:
+      operationId: listChats
+      tags: [chats]
+      summary: List all chats for a session/user
+      responses:
+        "200":
+          description: List of chats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chat"
+    post:
+      operationId: createChat
+      tags: [chats]
+      summary: Create a new chat session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChatBody"
+      responses:
+        "201":
+          description: Created chat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+
+  /chats/{id}:
+    get:
+      operationId: getChat
+      tags: [chats]
+      summary: Get a single chat with its messages
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chat with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatWithMessages"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateChat
+      tags: [chats]
+      summary: Update chat title
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChatBody"
+      responses:
+        "200":
+          description: Updated chat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteChat
+      tags: [chats]
+      summary: Delete a chat
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /chats/{chatId}/messages:
+    get:
+      operationId: listMessages
+      tags: [messages]
+      summary: List messages for a chat
+      parameters:
+        - in: path
+          name: chatId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+
+  /generate:
+    post:
+      operationId: generate
+      tags: [ai]
+      summary: Generate AI response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateBody"
+      responses:
+        "200":
+          description: Generated result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateResult"
+
+  /upload:
+    post:
+      operationId: uploadFile
+      tags: [files]
+      summary: Upload a file (TXT or CSV) for processing
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                chatId:
+                  type: ["integer", "null"]
+              required:
+                - file
+      responses:
+        "200":
+          description: File content extracted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
+
+  /saved:
+    get:
+      operationId: listSavedOutputs
+      tags: [saved]
+      summary: List saved outputs
+      responses:
+        "200":
+          description: List of saved outputs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedOutput"
+    post:
+      operationId: createSavedOutput
+      tags: [saved]
+      summary: Save an output
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSavedOutputBody"
+      responses:
+        "201":
+          description: Saved output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedOutput"
+
+  /saved/{id}:
+    delete:
+      operationId: deleteSavedOutput
+      tags: [saved]
+      summary: Delete a saved output
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /share:
+    post:
+      operationId: createShareLink
+      tags: [share]
+      summary: Create a share link for an output
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShareBody"
+      responses:
+        "201":
+          description: Share link created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShareLink"
+
+  /share/{token}:
+    get:
+      operationId: getSharedOutput
+      tags: [share]
+      summary: Get a shared output by token
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Shared output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedOutput"
+        "404":
+          description: Not found
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [chats]
+      summary: Get usage statistics summary
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +303,262 @@ components:
       required:
         - status
 
+    Chat:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        mode:
+          type: string
+        messageCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - title
+        - mode
+        - messageCount
+        - createdAt
+        - updatedAt
+
+    ChatWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        mode:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+      required:
+        - id
+        - title
+        - mode
+        - createdAt
+        - updatedAt
+        - messages
+
+    CreateChatBody:
+      type: object
+      properties:
+        title:
+          type: string
+        mode:
+          type: string
+      required:
+        - title
+        - mode
+
+    UpdateChatBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        chatId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        mode:
+          type: string
+        keywords:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - chatId
+        - role
+        - content
+        - mode
+        - keywords
+        - createdAt
+
+    GenerateBody:
+      type: object
+      properties:
+        prompt:
+          type: string
+        mode:
+          type: string
+        chatId:
+          type: ["integer", "null"]
+        fileContent:
+          type: ["string", "null"]
+      required:
+        - prompt
+        - mode
+
+    GenerateResult:
+      type: object
+      properties:
+        content:
+          type: string
+        mode:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        messageId:
+          type: ["integer", "null"]
+        chatId:
+          type: ["integer", "null"]
+      required:
+        - content
+        - mode
+        - keywords
+        - suggestions
+        - messageId
+        - chatId
+
+    UploadResult:
+      type: object
+      properties:
+        content:
+          type: string
+        filename:
+          type: string
+        fileId:
+          type: integer
+      required:
+        - content
+        - filename
+        - fileId
+
+    SavedOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        mode:
+          type: string
+        chatId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - content
+        - mode
+        - chatId
+        - createdAt
+
+    CreateSavedOutputBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        mode:
+          type: string
+        chatId:
+          type: ["integer", "null"]
+      required:
+        - title
+        - content
+        - mode
+
+    ShareLink:
+      type: object
+      properties:
+        token:
+          type: string
+        url:
+          type: string
+      required:
+        - token
+        - url
+
+    CreateShareBody:
+      type: object
+      properties:
+        content:
+          type: string
+        title:
+          type: string
+        mode:
+          type: string
+      required:
+        - content
+        - title
+        - mode
+
+    SharedOutput:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        mode:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - title
+        - content
+        - mode
+        - createdAt
+
+    StatsResult:
+      type: object
+      properties:
+        totalChats:
+          type: integer
+        totalMessages:
+          type: integer
+        totalSaved:
+          type: integer
+        modeBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModeCount"
+      required:
+        - totalChats
+        - totalMessages
+        - totalSaved
+        - modeBreakdown
+
+    ModeCount:
+      type: object
+      properties:
+        mode:
+          type: string
+        count:
+          type: integer
+      required:
+        - mode
+        - count

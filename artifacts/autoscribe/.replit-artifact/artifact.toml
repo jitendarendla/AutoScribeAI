@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AutoScribe AI+"
+version = "1.0.0"
+id = "artifacts/autoscribe"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22771
+
+[services.development]
+run = "pnpm --filter @workspace/autoscribe run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/autoscribe", "run", "build" ]
+publicDir = "artifacts/autoscribe/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22771"
+BASE_PATH = "/"
