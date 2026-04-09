@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const savedOutputsTable = pgTable("saved_outputs", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id"),
   title: text("title").notNull(),
   content: text("content").notNull(),
   mode: text("mode").notNull().default("report"),
@@ -17,12 +18,16 @@ export const shareLinksTable = pgTable("share_links", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   mode: text("mode").notNull().default("report"),
+  chatId: integer("chat_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const filesTable = pgTable("files", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  guestSessionId: text("guest_session_id"),
   filename: text("filename").notNull(),
+  fileType: text("file_type").notNull().default("txt"),
   content: text("content").notNull(),
   chatId: integer("chat_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

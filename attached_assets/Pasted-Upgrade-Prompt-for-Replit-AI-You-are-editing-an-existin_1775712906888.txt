@@ -1,0 +1,447 @@
+Upgrade Prompt for Replit AI
+
+You are editing an existing full-stack web app called AutoScribe AI+.
+Do not rebuild from scratch.
+Keep the current UI theme, color palette, layout, and overall look exactly as it is.
+The login page, dashboard layout, chat area, tabs, and right insights panel already look good.
+Only implement the missing functionality and small feature additions listed below.
+
+1. Main Goal
+
+Upgrade the existing app into a deployable end-to-end product with:
+
+proper authentication
+real database connection
+user-specific chat history
+working share link
+structured output formatting
+a few simple but smart sidebar features
+no unnecessary UI redesign
+2. Critical Fixes Required
+2.1 Authentication must be real
+
+Right now any random email/password logs in. Fix this.
+
+Required behavior
+Add Sign Up page
+Keep Sign In page
+Keep Continue as Guest
+Only registered users can log in with email/password
+Guest users can use the app, but guest chats are separate and temporary unless stored in DB under guest session
+On logout, session must clear correctly
+Auth requirements
+Use simple auth with backend validation
+Hash passwords using bcrypt
+Use JWT or session cookies
+Store users in database
+Pages
+/login
+/signup
+/dashboard
+Signup fields
+Full Name
+Email
+Password
+Confirm Password
+Validation
+Prevent duplicate email signup
+Password minimum 6 chars
+Show proper error messages
+2.2 Chats must belong to the correct user
+
+Right now chats appear for everyone. Fix this completely.
+
+Required behavior
+Each logged-in user sees only their own chats
+Guest sees only guest chats
+If user A logs out and user B logs in, user B must not see user A chats
+Chats persist after logout/login for registered users
+Recent chats in sidebar must be filtered by current user ID
+Chat data to store
+chat id
+user id
+guest session id if guest
+title
+mode
+user prompt
+report output
+code output
+documentation output
+insights output
+created at
+updated at
+is_saved
+share token optional
+2.3 Share link must work
+
+Right now “Generate Share Link” does not work.
+
+Required behavior
+Clicking share link creates a public read-only link for the current chat
+Example route: /share/:token
+Shared page shows:
+prompt
+report
+code
+docs
+insights
+No edit on shared page
+Add “Copy Link” button
+Generate unique token in backend
+Reuse existing token if already generated for that chat
+3. Sidebar Improvements
+
+Do not clutter it. Add only simple, useful features.
+
+Current sidebar only has:
+
+New Chat
+Recent Chats
+
+Add these 5 features only:
+
+3.1 Saved Outputs
+Sidebar item: Saved
+Show chats marked as saved/starred
+Add save/star button on each chat or output card
+3.2 Uploaded Files
+Sidebar item: Files
+Show uploaded TXT/CSV files for current user
+Clicking file opens small preview or file metadata
+3.3 Templates
+Sidebar item: Templates
+Let user choose structured output template
+Keep it simple with 4 presets:
+General Topic
+University / Institution
+Experiment / Lab
+Project / Technical Concept
+3.4 Shared Links
+Sidebar item: Shared
+Show chats for which share link was generated
+3.5 Profile / Account
+Sidebar item: Profile
+Show name, email, account type
+Button for logout
+
+Keep these items visually consistent with current sidebar design.
+
+4. Structured Output Generation
+
+This is the most important output change.
+
+Right now output is mostly paragraph-style.
+Change it so that Report and Documentation tabs produce structured sections.
+
+Do not remove existing tabs:
+
+Report
+Code
+Docs
+Insights
+
+Keep all tabs, but improve format.
+
+4.1 Report tab must be structured
+
+Instead of plain paragraphs, generate sectioned output.
+
+Default General Template
+
+Use headings like:
+
+Introduction
+Overview
+Key Points
+Applications / Uses
+Benefits / Advantages
+Important Details
+Conclusion
+University / Institution Template
+
+If prompt looks like college/university/institution:
+
+Introduction
+About the Institution
+Courses / Programs
+Admission Process
+Facilities
+Benefits / Highlights
+Placement / Career Opportunities
+Conclusion
+Experiment / Lab Template
+
+If prompt looks like experiment/lab/topic:
+
+Aim
+Introduction / Theory
+Prerequisites
+Tools / Requirements
+Procedure / Steps
+Expected Output / Result
+Applications
+Conclusion
+Project / Technical Concept Template
+Introduction
+Problem Statement
+Working Principle
+Technologies Used
+Benefits
+Limitations
+Real-world Applications
+Conclusion
+
+If possible, allow template selection from sidebar Templates section or dropdown.
+
+4.2 Documentation tab must be structured
+
+For explanations, show:
+
+Definition
+Purpose
+Working
+Key Features
+Example
+Notes / Precautions
+
+For code documentation, show:
+
+What the code does
+Input
+Output
+Step-by-step logic
+Important functions used
+4.3 Insights tab
+
+Keep current insights behavior, but make it more useful:
+
+Keywords
+Detected topic
+Output type
+Confidence score (simple mock number is fine)
+Suggested next actions
+5. Quick Actions Improvement
+
+Keep existing quick actions:
+
+Summarize
+Explain
+Generate Code
+Extract Keywords
+
+Add only these 2 simple actions:
+
+Create Structured Report
+Convert to Documentation
+
+These should just reuse the current prompt and call the backend in corresponding mode.
+
+6. Mode Handling
+
+Current mode dropdown is good. Keep it.
+
+Supported modes:
+
+Report
+Code
+Documentation
+Insights
+
+Backend should generate all outputs if needed, but frontend may prioritize the selected mode first.
+
+7. File Upload
+
+Keep this simple.
+
+Supported files
+.txt
+.csv
+Behavior
+User uploads file
+File is stored in backend or lightweight storage
+Content is extracted and used as prompt context
+File record is saved to DB
+File appears under sidebar Files section
+CSV behavior
+Parse CSV
+Show mini preview table if possible
+Use CSV content to generate report/insights
+8. Database Requirements
+
+Use a real database connection now.
+
+Preferred:
+
+SQLite for fast completion
+ORM: SQLAlchemy or Prisma equivalent depending on stack
+Required tables
+users
+id
+full_name
+email
+password_hash
+created_at
+chats
+id
+user_id nullable
+guest_session_id nullable
+title
+mode
+prompt
+report_output
+code_output
+docs_output
+insights_output
+is_saved
+share_token nullable
+created_at
+updated_at
+files
+id
+user_id nullable
+guest_session_id nullable
+file_name
+file_type
+file_path or file_content
+uploaded_at
+sessions if needed
+id
+user_id
+token
+created_at
+expires_at
+9. API Requirements
+Auth
+POST /api/auth/signup
+POST /api/auth/login
+POST /api/auth/logout
+GET /api/auth/me
+Chats
+GET /api/chats
+POST /api/chats
+GET /api/chats/:id
+PATCH /api/chats/:id/save
+DELETE /api/chats/:id
+Generate
+POST /api/generate
+
+Input example:
+
+{
+  "prompt": "Explain me about SPSU in detailed",
+  "mode": "report",
+  "template": "university",
+  "fileId": null
+}
+
+Output example:
+
+{
+  "title": "SPSU Detailed Overview",
+  "report": {
+    "introduction": "...",
+    "about": "...",
+    "courses": ["...", "..."],
+    "admission_process": "...",
+    "facilities": ["...", "..."],
+    "benefits": ["...", "..."],
+    "placements": "...",
+    "conclusion": "..."
+  },
+  "code": "...",
+  "documentation": {
+    "definition": "...",
+    "purpose": "...",
+    "working": "...",
+    "example": "..."
+  },
+  "insights": {
+    "keywords": ["spsu", "university", "courses"],
+    "topic": "Education",
+    "confidence": 0.89,
+    "suggestions": ["Generate executive summary", "Compare with another university"]
+  }
+}
+Files
+POST /api/files/upload
+GET /api/files
+GET /api/files/:id
+Sharing
+POST /api/share/:chatId
+GET /api/share/:token
+10. AI Logic
+
+If real model integration is heavy, keep the current generation logic but improve structure.
+
+Preferred backend approach:
+
+Use OpenAI or Gemini API if API key exists
+Otherwise use mock or fallback generator
+Still preserve BERT/T5/CodeT5 naming in architecture comments because this matches project explanation
+If I later provide trained model code, keep backend modular so those models can be plugged in easily
+Important
+
+Create a backend service layer like:
+
+understanding_service
+report_service
+code_service
+docs_service
+insight_service
+
+So I can replace logic later.
+
+11. UI/UX Rules
+
+Do not redesign the app.
+Keep the existing beautiful look.
+
+Only improve functionality and small additions:
+
+add signup page matching login page style
+add sidebar items
+improve output formatting with cards/sections/headings
+preserve dark premium look
+preserve current dashboard layout
+preserve right panel
+Structured output UI
+
+For Report and Docs tabs:
+
+render section headings
+use cards or accordions
+bullet points where appropriate
+avoid long unbroken paragraphs
+12. Acceptance Criteria
+
+The app is complete only if all these work:
+
+User can sign up
+Only signed-up users can log in
+Guest login still works
+User-specific chats persist correctly
+One user cannot see another user’s chats
+Sidebar shows new sections: Saved, Files, Templates, Shared, Profile
+Share link generates and opens working public page
+Report tab renders structured sections
+Documentation tab renders structured sections
+Current UI theme remains unchanged
+Database is connected and actually storing users/chats/files
+App is ready for deployment
+13. Final Instructions
+Modify the current project only
+Do not remove existing working parts
+Keep code modular and deployable
+Implement fully end-to-end
+After code changes, provide:
+updated file tree
+environment variables needed
+deployment steps for Replit/Render/Vercel
+Optional small polish if easy
+
+If tokens allow, add:
+
+rename chat
+delete chat
+toast notifications
+“last active” timestamp

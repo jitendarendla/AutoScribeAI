@@ -3,16 +3,19 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface GenerateResult {
-  content: string;
-  mode: string;
+  report: string;
+  code: string;
+  docs: string;
+  insights: string;
   keywords: string[];
   suggestions: string[];
   /** @nullable */
   messageId: number | null;
   /** @nullable */
   chatId: number | null;
+  title: string;
 }

@@ -3,23 +3,34 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
+export * from "./authResponse";
 export * from "./chat";
 export * from "./chatWithMessages";
 export * from "./createChatBody";
 export * from "./createSavedOutputBody";
 export * from "./createShareBody";
+export * from "./fileItem";
 export * from "./generateBody";
 export * from "./generateResult";
+export * from "./getStatsParams";
 export * from "./healthStatus";
+export * from "./listChatsParams";
+export * from "./listFilesParams";
+export * from "./listSavedOutputsParams";
+export * from "./listSharedLinksParams";
+export * from "./loginBody";
 export * from "./message";
 export * from "./modeCount";
 export * from "./savedOutput";
 export * from "./sharedOutput";
 export * from "./shareLink";
+export * from "./shareLinkItem";
+export * from "./signupBody";
 export * from "./statsResult";
 export * from "./updateChatBody";
 export * from "./uploadFileBody";
 export * from "./uploadResult";
+export * from "./userProfile";

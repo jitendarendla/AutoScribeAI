@@ -6,7 +6,8 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface ShareLink {
-  token: string;
-  url: string;
+export interface SignupBody {
+  fullName: string;
+  email: string;
+  password: string;
 }

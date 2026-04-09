@@ -6,7 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface ShareLink {
+export interface ShareLinkItem {
+  id: number;
   token: string;
-  url: string;
+  title: string;
+  mode: string;
+  createdAt: string;
 }

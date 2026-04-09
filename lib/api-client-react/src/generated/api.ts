@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
@@ -17,22 +17,33 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AuthResponse,
   Chat,
   ChatWithMessages,
   CreateChatBody,
   CreateSavedOutputBody,
   CreateShareBody,
+  FileItem,
   GenerateBody,
   GenerateResult,
+  GetStatsParams,
   HealthStatus,
+  ListChatsParams,
+  ListFilesParams,
+  ListSavedOutputsParams,
+  ListSharedLinksParams,
+  LoginBody,
   Message,
   SavedOutput,
   ShareLink,
+  ShareLinkItem,
   SharedOutput,
+  SignupBody,
   StatsResult,
   UpdateChatBody,
   UploadFileBody,
   UploadResult,
+  UserProfile,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -120,37 +131,294 @@ export function useHealthCheck<
 }
 
 /**
- * @summary List all chats for a session/user
+ * @summary Register a new user
  */
-export const getListChatsUrl = () => {
-  return `/api/chats`;
+export const getSignupUrl = () => {
+  return `/api/auth/signup`;
 };
 
-export const listChats = async (options?: RequestInit): Promise<Chat[]> => {
-  return customFetch<Chat[]>(getListChatsUrl(), {
+export const signup = async (
+  signupBody: SignupBody,
+  options?: RequestInit,
+): Promise<AuthResponse> => {
+  return customFetch<AuthResponse>(getSignupUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(signupBody),
+  });
+};
+
+export const getSignupMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof signup>>,
+    TError,
+    { data: BodyType<SignupBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof signup>>,
+  TError,
+  { data: BodyType<SignupBody> },
+  TContext
+> => {
+  const mutationKey = ["signup"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof signup>>,
+    { data: BodyType<SignupBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return signup(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SignupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof signup>>
+>;
+export type SignupMutationBody = BodyType<SignupBody>;
+export type SignupMutationError = ErrorType<void>;
+
+/**
+ * @summary Register a new user
+ */
+export const useSignup = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof signup>>,
+    TError,
+    { data: BodyType<SignupBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof signup>>,
+  TError,
+  { data: BodyType<SignupBody> },
+  TContext
+> => {
+  return useMutation(getSignupMutationOptions(options));
+};
+
+/**
+ * @summary Login with email and password
+ */
+export const getLoginUrl = () => {
+  return `/api/auth/login`;
+};
+
+export const login = async (
+  loginBody: LoginBody,
+  options?: RequestInit,
+): Promise<AuthResponse> => {
+  return customFetch<AuthResponse>(getLoginUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(loginBody),
+  });
+};
+
+export const getLoginMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof login>>,
+    TError,
+    { data: BodyType<LoginBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof login>>,
+  TError,
+  { data: BodyType<LoginBody> },
+  TContext
+> => {
+  const mutationKey = ["login"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof login>>,
+    { data: BodyType<LoginBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return login(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof login>>
+>;
+export type LoginMutationBody = BodyType<LoginBody>;
+export type LoginMutationError = ErrorType<void>;
+
+/**
+ * @summary Login with email and password
+ */
+export const useLogin = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof login>>,
+    TError,
+    { data: BodyType<LoginBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof login>>,
+  TError,
+  { data: BodyType<LoginBody> },
+  TContext
+> => {
+  return useMutation(getLoginMutationOptions(options));
+};
+
+/**
+ * @summary Get current user from JWT
+ */
+export const getGetMeUrl = () => {
+  return `/api/auth/me`;
+};
+
+export const getMe = async (options?: RequestInit): Promise<UserProfile> => {
+  return customFetch<UserProfile>(getGetMeUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getListChatsQueryKey = () => {
-  return [`/api/chats`] as const;
+export const getGetMeQueryKey = () => {
+  return [`/api/auth/me`] as const;
+};
+
+export const getGetMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMe>>> = ({
+    signal,
+  }) => getMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMe>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>;
+export type GetMeQueryError = ErrorType<void>;
+
+/**
+ * @summary Get current user from JWT
+ */
+
+export function useGetMe<
+  TData = Awaited<ReturnType<typeof getMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List chats for current user or guest session
+ */
+export const getListChatsUrl = (params?: ListChatsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/chats?${stringifiedParams}`
+    : `/api/chats`;
+};
+
+export const listChats = async (
+  params?: ListChatsParams,
+  options?: RequestInit,
+): Promise<Chat[]> => {
+  return customFetch<Chat[]>(getListChatsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListChatsQueryKey = (params?: ListChatsParams) => {
+  return [`/api/chats`, ...(params ? [params] : [])] as const;
 };
 
 export const getListChatsQueryOptions = <
   TData = Awaited<ReturnType<typeof listChats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof listChats>>, TError, TData>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: ListChatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listChats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListChatsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getListChatsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listChats>>> = ({
     signal,
-  }) => listChats({ signal, ...requestOptions });
+  }) => listChats(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listChats>>,
@@ -165,17 +433,24 @@ export type ListChatsQueryResult = NonNullable<
 export type ListChatsQueryError = ErrorType<unknown>;
 
 /**
- * @summary List all chats for a session/user
+ * @summary List chats for current user or guest session
  */
 
 export function useListChats<
   TData = Awaited<ReturnType<typeof listChats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof listChats>>, TError, TData>;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getListChatsQueryOptions(options);
+>(
+  params?: ListChatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listChats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListChatsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -271,7 +546,7 @@ export const useCreateChat = <
 };
 
 /**
- * @summary Get a single chat with its messages
+ * @summary Get a single chat with messages
  */
 export const getGetChatUrl = (id: number) => {
   return `/api/chats/${id}`;
@@ -325,7 +600,7 @@ export type GetChatQueryResult = NonNullable<
 export type GetChatQueryError = ErrorType<void>;
 
 /**
- * @summary Get a single chat with its messages
+ * @summary Get a single chat with messages
  */
 
 export function useGetChat<
@@ -368,7 +643,7 @@ export const updateChat = async (
 };
 
 export const getUpdateChatMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -409,13 +684,13 @@ export type UpdateChatMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateChat>>
 >;
 export type UpdateChatMutationBody = BodyType<UpdateChatBody>;
-export type UpdateChatMutationError = ErrorType<void>;
+export type UpdateChatMutationError = ErrorType<unknown>;
 
 /**
  * @summary Update chat title
  */
 export const useUpdateChat = <
-  TError = ErrorType<void>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -519,6 +794,90 @@ export const useDeleteChat = <
 };
 
 /**
+ * @summary Toggle save/star on a chat
+ */
+export const getToggleSaveChatUrl = (id: number) => {
+  return `/api/chats/${id}/save`;
+};
+
+export const toggleSaveChat = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Chat> => {
+  return customFetch<Chat>(getToggleSaveChatUrl(id), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getToggleSaveChatMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleSaveChat>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof toggleSaveChat>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["toggleSaveChat"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof toggleSaveChat>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return toggleSaveChat(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ToggleSaveChatMutationResult = NonNullable<
+  Awaited<ReturnType<typeof toggleSaveChat>>
+>;
+
+export type ToggleSaveChatMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Toggle save/star on a chat
+ */
+export const useToggleSaveChat = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleSaveChat>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof toggleSaveChat>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getToggleSaveChatMutationOptions(options));
+};
+
+/**
  * @summary List messages for a chat
  */
 export const getListMessagesUrl = (chatId: number) => {
@@ -606,7 +965,7 @@ export function useListMessages<
 }
 
 /**
- * @summary Generate AI response
+ * @summary Generate AI response with structured output
  */
 export const getGenerateUrl = () => {
   return `/api/generate`;
@@ -669,7 +1028,7 @@ export type GenerateMutationBody = BodyType<GenerateBody>;
 export type GenerateMutationError = ErrorType<unknown>;
 
 /**
- * @summary Generate AI response
+ * @summary Generate AI response with structured output
  */
 export const useGenerate = <
   TError = ErrorType<unknown>,
@@ -692,7 +1051,7 @@ export const useGenerate = <
 };
 
 /**
- * @summary Upload a file (TXT or CSV) for processing
+ * @summary Upload a file (TXT or CSV)
  */
 export const getUploadFileUrl = () => {
   return `/api/upload`;
@@ -760,7 +1119,7 @@ export type UploadFileMutationBody = BodyType<UploadFileBody>;
 export type UploadFileMutationError = ErrorType<unknown>;
 
 /**
- * @summary Upload a file (TXT or CSV) for processing
+ * @summary Upload a file (TXT or CSV)
  */
 export const useUploadFile = <
   TError = ErrorType<unknown>,
@@ -783,43 +1142,156 @@ export const useUploadFile = <
 };
 
 /**
- * @summary List saved outputs
+ * @summary List uploaded files for current user
  */
-export const getListSavedOutputsUrl = () => {
-  return `/api/saved`;
+export const getListFilesUrl = (params?: ListFilesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/files?${stringifiedParams}`
+    : `/api/files`;
 };
 
-export const listSavedOutputs = async (
+export const listFiles = async (
+  params?: ListFilesParams,
   options?: RequestInit,
-): Promise<SavedOutput[]> => {
-  return customFetch<SavedOutput[]>(getListSavedOutputsUrl(), {
+): Promise<FileItem[]> => {
+  return customFetch<FileItem[]>(getListFilesUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getListSavedOutputsQueryKey = () => {
-  return [`/api/saved`] as const;
+export const getListFilesQueryKey = (params?: ListFilesParams) => {
+  return [`/api/files`, ...(params ? [params] : [])] as const;
+};
+
+export const getListFilesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFiles>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListFilesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listFiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListFilesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFiles>>> = ({
+    signal,
+  }) => listFiles(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listFiles>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListFilesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listFiles>>
+>;
+export type ListFilesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List uploaded files for current user
+ */
+
+export function useListFiles<
+  TData = Awaited<ReturnType<typeof listFiles>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListFilesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listFiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListFilesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List saved outputs
+ */
+export const getListSavedOutputsUrl = (params?: ListSavedOutputsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/saved?${stringifiedParams}`
+    : `/api/saved`;
+};
+
+export const listSavedOutputs = async (
+  params?: ListSavedOutputsParams,
+  options?: RequestInit,
+): Promise<SavedOutput[]> => {
+  return customFetch<SavedOutput[]>(getListSavedOutputsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSavedOutputsQueryKey = (
+  params?: ListSavedOutputsParams,
+) => {
+  return [`/api/saved`, ...(params ? [params] : [])] as const;
 };
 
 export const getListSavedOutputsQueryOptions = <
   TData = Awaited<ReturnType<typeof listSavedOutputs>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof listSavedOutputs>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: ListSavedOutputsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSavedOutputs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListSavedOutputsQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getListSavedOutputsQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof listSavedOutputs>>
-  > = ({ signal }) => listSavedOutputs({ signal, ...requestOptions });
+  > = ({ signal }) => listSavedOutputs(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listSavedOutputs>>,
@@ -840,15 +1312,18 @@ export type ListSavedOutputsQueryError = ErrorType<unknown>;
 export function useListSavedOutputs<
   TData = Awaited<ReturnType<typeof listSavedOutputs>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof listSavedOutputs>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getListSavedOutputsQueryOptions(options);
+>(
+  params?: ListSavedOutputsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSavedOutputs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSavedOutputsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -1028,7 +1503,7 @@ export const useDeleteSavedOutput = <
 };
 
 /**
- * @summary Create a share link for an output
+ * @summary Create a share link
  */
 export const getCreateShareLinkUrl = () => {
   return `/api/share`;
@@ -1091,7 +1566,7 @@ export type CreateShareLinkMutationBody = BodyType<CreateShareBody>;
 export type CreateShareLinkMutationError = ErrorType<unknown>;
 
 /**
- * @summary Create a share link for an output
+ * @summary Create a share link
  */
 export const useCreateShareLink = <
   TError = ErrorType<unknown>,
@@ -1114,7 +1589,101 @@ export const useCreateShareLink = <
 };
 
 /**
- * @summary Get a shared output by token
+ * @summary List share links for current user
+ */
+export const getListSharedLinksUrl = (params?: ListSharedLinksParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/share/list?${stringifiedParams}`
+    : `/api/share/list`;
+};
+
+export const listSharedLinks = async (
+  params?: ListSharedLinksParams,
+  options?: RequestInit,
+): Promise<ShareLinkItem[]> => {
+  return customFetch<ShareLinkItem[]>(getListSharedLinksUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSharedLinksQueryKey = (params?: ListSharedLinksParams) => {
+  return [`/api/share/list`, ...(params ? [params] : [])] as const;
+};
+
+export const getListSharedLinksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSharedLinks>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListSharedLinksParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSharedLinks>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSharedLinksQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSharedLinks>>> = ({
+    signal,
+  }) => listSharedLinks(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSharedLinks>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSharedLinksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSharedLinks>>
+>;
+export type ListSharedLinksQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List share links for current user
+ */
+
+export function useListSharedLinks<
+  TData = Awaited<ReturnType<typeof listSharedLinks>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListSharedLinksParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSharedLinks>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSharedLinksQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a shared output by token (public)
  */
 export const getGetSharedOutputUrl = (token: string) => {
   return `/api/share/${token}`;
@@ -1174,7 +1743,7 @@ export type GetSharedOutputQueryResult = NonNullable<
 export type GetSharedOutputQueryError = ErrorType<void>;
 
 /**
- * @summary Get a shared output by token
+ * @summary Get a shared output by token (public)
  */
 
 export function useGetSharedOutput<
@@ -1201,37 +1770,59 @@ export function useGetSharedOutput<
 }
 
 /**
- * @summary Get usage statistics summary
+ * @summary Get usage statistics
  */
-export const getGetStatsUrl = () => {
-  return `/api/stats`;
+export const getGetStatsUrl = (params?: GetStatsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/stats?${stringifiedParams}`
+    : `/api/stats`;
 };
 
-export const getStats = async (options?: RequestInit): Promise<StatsResult> => {
-  return customFetch<StatsResult>(getGetStatsUrl(), {
+export const getStats = async (
+  params?: GetStatsParams,
+  options?: RequestInit,
+): Promise<StatsResult> => {
+  return customFetch<StatsResult>(getGetStatsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetStatsQueryKey = () => {
-  return [`/api/stats`] as const;
+export const getGetStatsQueryKey = (params?: GetStatsParams) => {
+  return [`/api/stats`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof getStats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getStats>>, TError, TData>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetStatsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetStatsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getStats>>> = ({
     signal,
-  }) => getStats({ signal, ...requestOptions });
+  }) => getStats(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getStats>>,
@@ -1246,17 +1837,24 @@ export type GetStatsQueryResult = NonNullable<
 export type GetStatsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get usage statistics summary
+ * @summary Get usage statistics
  */
 
 export function useGetStats<
   TData = Awaited<ReturnType<typeof getStats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getStats>>, TError, TData>;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetStatsQueryOptions(options);
+>(
+  params?: GetStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStatsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

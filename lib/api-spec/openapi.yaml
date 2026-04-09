@@ -1,26 +1,20 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: AutoScribe AI+ API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
   - name: chats
-    description: Chat session operations
   - name: messages
-    description: Chat message operations
   - name: saved
-    description: Saved outputs
   - name: files
-    description: File upload and management
   - name: share
-    description: Share link operations
   - name: ai
-    description: AI generation operations
 paths:
   /healthz:
     get:
@@ -35,11 +29,74 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupBody"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user from JWT
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+
   /chats:
     get:
       operationId: listChats
       tags: [chats]
-      summary: List all chats for a session/user
+      summary: List chats for current user or guest session
+      parameters:
+        - in: query
+          name: guestSessionId
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: List of chats
@@ -71,7 +128,7 @@ paths:
     get:
       operationId: getChat
       tags: [chats]
-      summary: Get a single chat with its messages
+      summary: Get a single chat with messages
       parameters:
         - in: path
           name: id
@@ -110,8 +167,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Chat"
-        "404":
-          description: Not found
     delete:
       operationId: deleteChat
       tags: [chats]
@@ -125,6 +180,25 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /chats/{id}/save:
+    patch:
+      operationId: toggleSaveChat
+      tags: [chats]
+      summary: Toggle save/star on a chat
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated chat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
 
   /chats/{chatId}/messages:
     get:
@@ -151,7 +225,7 @@ paths:
     post:
       operationId: generate
       tags: [ai]
-      summary: Generate AI response
+      summary: Generate AI response with structured output
       requestBody:
         required: true
         content:
@@ -160,7 +234,7 @@ paths:
               $ref: "#/components/schemas/GenerateBody"
       responses:
         "200":
-          description: Generated result
+          description: Generated structured result
           content:
             application/json:
               schema:
@@ -170,7 +244,7 @@ paths:
     post:
       operationId: uploadFile
       tags: [files]
-      summary: Upload a file (TXT or CSV) for processing
+      summary: Upload a file (TXT or CSV)
       requestBody:
         required: true
         content:
@@ -193,11 +267,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/UploadResult"
 
+  /files:
+    get:
+      operationId: listFiles
+      tags: [files]
+      summary: List uploaded files for current user
+      parameters:
+        - in: query
+          name: guestSessionId
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FileItem"
+
   /saved:
     get:
       operationId: listSavedOutputs
       tags: [saved]
       summary: List saved outputs
+      parameters:
+        - in: query
+          name: guestSessionId
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: List of saved outputs
@@ -244,7 +345,7 @@ paths:
     post:
       operationId: createShareLink
       tags: [share]
-      summary: Create a share link for an output
+      summary: Create a share link
       requestBody:
         required: true
         content:
@@ -259,11 +360,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/ShareLink"
 
+  /share/list:
+    get:
+      operationId: listSharedLinks
+      tags: [share]
+      summary: List share links for current user
+      parameters:
+        - in: query
+          name: guestSessionId
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of share links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShareLinkItem"
+
   /share/{token}:
     get:
       operationId: getSharedOutput
       tags: [share]
-      summary: Get a shared output by token
+      summary: Get a shared output by token (public)
       parameters:
         - in: path
           name: token
@@ -284,7 +406,13 @@ paths:
     get:
       operationId: getStats
       tags: [chats]
-      summary: Get usage statistics summary
+      summary: Get usage statistics
+      parameters:
+        - in: query
+          name: guestSessionId
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Stats
@@ -300,31 +428,76 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
+
+    SignupBody:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required: [fullName, email, password]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+      required: [token, user]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+      required: [id, fullName, email, createdAt]
 
     Chat:
       type: object
       properties:
         id:
           type: integer
+        userId:
+          type: ["integer", "null"]
+        guestSessionId:
+          type: ["string", "null"]
         title:
           type: string
         mode:
           type: string
+        template:
+          type: string
+        isSaved:
+          type: boolean
+        shareToken:
+          type: ["string", "null"]
         messageCount:
           type: integer
         createdAt:
           type: string
         updatedAt:
           type: string
-      required:
-        - id
-        - title
-        - mode
-        - messageCount
-        - createdAt
-        - updatedAt
+      required: [id, title, mode, template, isSaved, shareToken, messageCount, createdAt, updatedAt]
 
     ChatWithMessages:
       type: object
@@ -335,6 +508,22 @@ components:
           type: string
         mode:
           type: string
+        template:
+          type: string
+        isSaved:
+          type: boolean
+        shareToken:
+          type: ["string", "null"]
+        prompt:
+          type: ["string", "null"]
+        reportOutput:
+          type: ["string", "null"]
+        codeOutput:
+          type: ["string", "null"]
+        docsOutput:
+          type: ["string", "null"]
+        insightsOutput:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -343,13 +532,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Message"
-      required:
-        - id
-        - title
-        - mode
-        - createdAt
-        - updatedAt
-        - messages
+      required: [id, title, mode, template, isSaved, shareToken, createdAt, updatedAt, messages]
 
     CreateChatBody:
       type: object
@@ -358,17 +541,16 @@ components:
           type: string
         mode:
           type: string
-      required:
-        - title
-        - mode
+        guestSessionId:
+          type: ["string", "null"]
+      required: [title, mode]
 
     UpdateChatBody:
       type: object
       properties:
         title:
           type: string
-      required:
-        - title
+      required: [title]
 
     Message:
       type: object
@@ -387,14 +569,7 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
-      required:
-        - id
-        - chatId
-        - role
-        - content
-        - mode
-        - keywords
-        - createdAt
+      required: [id, chatId, role, content, mode, keywords, createdAt]
 
     GenerateBody:
       type: object
@@ -403,20 +578,26 @@ components:
           type: string
         mode:
           type: string
+        template:
+          type: string
         chatId:
           type: ["integer", "null"]
         fileContent:
           type: ["string", "null"]
-      required:
-        - prompt
-        - mode
+        guestSessionId:
+          type: ["string", "null"]
+      required: [prompt, mode]
 
     GenerateResult:
       type: object
       properties:
-        content:
+        report:
           type: string
-        mode:
+        code:
+          type: string
+        docs:
+          type: string
+        insights:
           type: string
         keywords:
           type: array
@@ -430,13 +611,9 @@ components:
           type: ["integer", "null"]
         chatId:
           type: ["integer", "null"]
-      required:
-        - content
-        - mode
-        - keywords
-        - suggestions
-        - messageId
-        - chatId
+        title:
+          type: string
+      required: [report, code, docs, insights, keywords, suggestions, messageId, chatId, title]
 
     UploadResult:
       type: object
@@ -447,10 +624,20 @@ components:
           type: string
         fileId:
           type: integer
-      required:
-        - content
-        - filename
-        - fileId
+      required: [content, filename, fileId]
+
+    FileItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        fileType:
+          type: string
+        createdAt:
+          type: string
+      required: [id, filename, fileType, createdAt]
 
     SavedOutput:
       type: object
@@ -467,13 +654,7 @@ components:
           type: ["integer", "null"]
         createdAt:
           type: string
-      required:
-        - id
-        - title
-        - content
-        - mode
-        - chatId
-        - createdAt
+      required: [id, title, content, mode, chatId, createdAt]
 
     CreateSavedOutputBody:
       type: object
@@ -486,10 +667,9 @@ components:
           type: string
         chatId:
           type: ["integer", "null"]
-      required:
-        - title
-        - content
-        - mode
+        guestSessionId:
+          type: ["string", "null"]
+      required: [title, content, mode]
 
     ShareLink:
       type: object
@@ -498,9 +678,22 @@ components:
           type: string
         url:
           type: string
-      required:
-        - token
-        - url
+      required: [token, url]
+
+    ShareLinkItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        token:
+          type: string
+        title:
+          type: string
+        mode:
+          type: string
+        createdAt:
+          type: string
+      required: [id, token, title, mode, createdAt]
 
     CreateShareBody:
       type: object
@@ -511,10 +704,11 @@ components:
           type: string
         mode:
           type: string
-      required:
-        - content
-        - title
-        - mode
+        chatId:
+          type: ["integer", "null"]
+        guestSessionId:
+          type: ["string", "null"]
+      required: [content, title, mode]
 
     SharedOutput:
       type: object
@@ -527,11 +721,7 @@ components:
           type: string
         createdAt:
           type: string
-      required:
-        - title
-        - content
-        - mode
-        - createdAt
+      required: [title, content, mode, createdAt]
 
     StatsResult:
       type: object
@@ -546,11 +736,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ModeCount"
-      required:
-        - totalChats
-        - totalMessages
-        - totalSaved
-        - modeBreakdown
+      required: [totalChats, totalMessages, totalSaved, modeBreakdown]
 
     ModeCount:
       type: object
@@ -559,6 +745,4 @@ components:
           type: string
         count:
           type: integer
-      required:
-        - mode
-        - count
+      required: [mode, count]

@@ -3,13 +3,21 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface Chat {
   id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  guestSessionId?: string | null;
   title: string;
   mode: string;
+  template: string;
+  isSaved: boolean;
+  /** @nullable */
+  shareToken: string | null;
   messageCount: number;
   createdAt: string;
   updatedAt: string;

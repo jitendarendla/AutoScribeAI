@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from "zod";
 
@@ -15,12 +15,58 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * @summary List all chats for a session/user
+ * @summary Register a new user
  */
+export const SignupBody = zod.object({
+  fullName: zod.string(),
+  email: zod.string(),
+  password: zod.string(),
+});
+
+/**
+ * @summary Login with email and password
+ */
+export const LoginBody = zod.object({
+  email: zod.string(),
+  password: zod.string(),
+});
+
+export const LoginResponse = zod.object({
+  token: zod.string(),
+  user: zod.object({
+    id: zod.number(),
+    fullName: zod.string(),
+    email: zod.string(),
+    createdAt: zod.string(),
+  }),
+});
+
+/**
+ * @summary Get current user from JWT
+ */
+export const GetMeResponse = zod.object({
+  id: zod.number(),
+  fullName: zod.string(),
+  email: zod.string(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary List chats for current user or guest session
+ */
+export const ListChatsQueryParams = zod.object({
+  guestSessionId: zod.coerce.string().optional(),
+});
+
 export const ListChatsResponseItem = zod.object({
   id: zod.number(),
+  userId: zod.number().nullish(),
+  guestSessionId: zod.string().nullish(),
   title: zod.string(),
   mode: zod.string(),
+  template: zod.string(),
+  isSaved: zod.boolean(),
+  shareToken: zod.string().nullable(),
   messageCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -33,10 +79,11 @@ export const ListChatsResponse = zod.array(ListChatsResponseItem);
 export const CreateChatBody = zod.object({
   title: zod.string(),
   mode: zod.string(),
+  guestSessionId: zod.string().nullish(),
 });
 
 /**
- * @summary Get a single chat with its messages
+ * @summary Get a single chat with messages
  */
 export const GetChatParams = zod.object({
   id: zod.coerce.number(),
@@ -46,6 +93,14 @@ export const GetChatResponse = zod.object({
   id: zod.number(),
   title: zod.string(),
   mode: zod.string(),
+  template: zod.string(),
+  isSaved: zod.boolean(),
+  shareToken: zod.string().nullable(),
+  prompt: zod.string().nullish(),
+  reportOutput: zod.string().nullish(),
+  codeOutput: zod.string().nullish(),
+  docsOutput: zod.string().nullish(),
+  insightsOutput: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
   messages: zod.array(
@@ -74,8 +129,13 @@ export const UpdateChatBody = zod.object({
 
 export const UpdateChatResponse = zod.object({
   id: zod.number(),
+  userId: zod.number().nullish(),
+  guestSessionId: zod.string().nullish(),
   title: zod.string(),
   mode: zod.string(),
+  template: zod.string(),
+  isSaved: zod.boolean(),
+  shareToken: zod.string().nullable(),
   messageCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -86,6 +146,27 @@ export const UpdateChatResponse = zod.object({
  */
 export const DeleteChatParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Toggle save/star on a chat
+ */
+export const ToggleSaveChatParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ToggleSaveChatResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number().nullish(),
+  guestSessionId: zod.string().nullish(),
+  title: zod.string(),
+  mode: zod.string(),
+  template: zod.string(),
+  isSaved: zod.boolean(),
+  shareToken: zod.string().nullable(),
+  messageCount: zod.number(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
 });
 
 /**
@@ -107,26 +188,31 @@ export const ListMessagesResponseItem = zod.object({
 export const ListMessagesResponse = zod.array(ListMessagesResponseItem);
 
 /**
- * @summary Generate AI response
+ * @summary Generate AI response with structured output
  */
 export const GenerateBody = zod.object({
   prompt: zod.string(),
   mode: zod.string(),
+  template: zod.string().optional(),
   chatId: zod.number().nullish(),
   fileContent: zod.string().nullish(),
+  guestSessionId: zod.string().nullish(),
 });
 
 export const GenerateResponse = zod.object({
-  content: zod.string(),
-  mode: zod.string(),
+  report: zod.string(),
+  code: zod.string(),
+  docs: zod.string(),
+  insights: zod.string(),
   keywords: zod.array(zod.string()),
   suggestions: zod.array(zod.string()),
   messageId: zod.number().nullable(),
   chatId: zod.number().nullable(),
+  title: zod.string(),
 });
 
 /**
- * @summary Upload a file (TXT or CSV) for processing
+ * @summary Upload a file (TXT or CSV)
  */
 export const UploadFileBody = zod.object({
   file: zod.instanceof(File),
@@ -140,8 +226,27 @@ export const UploadFileResponse = zod.object({
 });
 
 /**
+ * @summary List uploaded files for current user
+ */
+export const ListFilesQueryParams = zod.object({
+  guestSessionId: zod.coerce.string().optional(),
+});
+
+export const ListFilesResponseItem = zod.object({
+  id: zod.number(),
+  filename: zod.string(),
+  fileType: zod.string(),
+  createdAt: zod.string(),
+});
+export const ListFilesResponse = zod.array(ListFilesResponseItem);
+
+/**
  * @summary List saved outputs
  */
+export const ListSavedOutputsQueryParams = zod.object({
+  guestSessionId: zod.coerce.string().optional(),
+});
+
 export const ListSavedOutputsResponseItem = zod.object({
   id: zod.number(),
   title: zod.string(),
@@ -160,6 +265,7 @@ export const CreateSavedOutputBody = zod.object({
   content: zod.string(),
   mode: zod.string(),
   chatId: zod.number().nullish(),
+  guestSessionId: zod.string().nullish(),
 });
 
 /**
@@ -170,16 +276,34 @@ export const DeleteSavedOutputParams = zod.object({
 });
 
 /**
- * @summary Create a share link for an output
+ * @summary Create a share link
  */
 export const CreateShareLinkBody = zod.object({
   content: zod.string(),
   title: zod.string(),
   mode: zod.string(),
+  chatId: zod.number().nullish(),
+  guestSessionId: zod.string().nullish(),
 });
 
 /**
- * @summary Get a shared output by token
+ * @summary List share links for current user
+ */
+export const ListSharedLinksQueryParams = zod.object({
+  guestSessionId: zod.coerce.string().optional(),
+});
+
+export const ListSharedLinksResponseItem = zod.object({
+  id: zod.number(),
+  token: zod.string(),
+  title: zod.string(),
+  mode: zod.string(),
+  createdAt: zod.string(),
+});
+export const ListSharedLinksResponse = zod.array(ListSharedLinksResponseItem);
+
+/**
+ * @summary Get a shared output by token (public)
  */
 export const GetSharedOutputParams = zod.object({
   token: zod.coerce.string(),
@@ -193,8 +317,12 @@ export const GetSharedOutputResponse = zod.object({
 });
 
 /**
- * @summary Get usage statistics summary
+ * @summary Get usage statistics
  */
+export const GetStatsQueryParams = zod.object({
+  guestSessionId: zod.coerce.string().optional(),
+});
+
 export const GetStatsResponse = zod.object({
   totalChats: zod.number(),
   totalMessages: zod.number(),

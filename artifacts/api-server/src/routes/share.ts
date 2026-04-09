@@ -2,14 +2,48 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { db, shareLinksTable } from "@workspace/db";
-import { CreateShareLinkBody, GetSharedOutputParams } from "@workspace/api-zod";
+import { extractUser } from "../lib/auth-middleware";
 
 const router: IRouter = Router();
 
+router.get("/share/list", async (req, res): Promise<void> => {
+  const auth = extractUser(req);
+  const guestSessionId = (req.query["guestSessionId"] as string) ?? null;
+
+  let links;
+  if (auth?.userId) {
+    links = await db
+      .select({
+        id: shareLinksTable.id,
+        token: shareLinksTable.token,
+        title: shareLinksTable.title,
+        mode: shareLinksTable.mode,
+        createdAt: shareLinksTable.createdAt,
+      })
+      .from(shareLinksTable)
+      .orderBy(shareLinksTable.createdAt);
+  } else {
+    links = [];
+  }
+
+  res.json(
+    links.map((l) => ({
+      ...l,
+      createdAt: l.createdAt.toISOString(),
+    }))
+  );
+});
+
 router.post("/share", async (req, res): Promise<void> => {
-  const parsed = CreateShareLinkBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const { content, title, mode, chatId } = req.body as {
+    content?: string;
+    title?: string;
+    mode?: string;
+    chatId?: number | null;
+  };
+
+  if (!content || !title || !mode) {
+    res.status(400).json({ error: "content, title, and mode are required" });
     return;
   }
 
@@ -17,22 +51,22 @@ router.post("/share", async (req, res): Promise<void> => {
 
   await db.insert(shareLinksTable).values({
     token,
-    title: parsed.data.title,
-    content: parsed.data.content,
-    mode: parsed.data.mode,
+    title,
+    content,
+    mode,
+    chatId: chatId ?? null,
   });
 
   const host = req.get("host") ?? "localhost";
-  const protocol = req.protocol ?? "https";
-  const url = `${protocol}://${host}/share/${token}`;
+  const protocol = req.headers["x-forwarded-proto"] ?? req.protocol ?? "https";
+  const url = `${protocol}://${host}/app/share/${token}`;
 
   res.status(201).json({ token, url });
 });
 
 router.get("/share/:token", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
-  const params = GetSharedOutputParams.safeParse({ token: raw });
-  if (!params.success) {
+  if (!raw) {
     res.status(400).json({ error: "Invalid token" });
     return;
   }
@@ -40,7 +74,7 @@ router.get("/share/:token", async (req, res): Promise<void> => {
   const [link] = await db
     .select()
     .from(shareLinksTable)
-    .where(eq(shareLinksTable.token, params.data.token));
+    .where(eq(shareLinksTable.token, raw));
 
   if (!link) {
     res.status(404).json({ error: "Shared output not found" });

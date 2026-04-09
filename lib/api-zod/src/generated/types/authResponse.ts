@@ -5,8 +5,9 @@
  * AutoScribe AI+ API specification
  * OpenAPI spec version: 0.2.0
  */
+import type { UserProfile } from "./userProfile";
 
-export interface ShareLink {
+export interface AuthResponse {
   token: string;
-  url: string;
+  user: UserProfile;
 }

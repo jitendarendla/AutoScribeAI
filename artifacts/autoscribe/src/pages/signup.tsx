@@ -8,30 +8,42 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Sparkles, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function Login() {
+export default function Signup() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
-  const { login, loginAsGuest } = useAuth();
+  const { signup } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!fullName.trim()) {
+      setError("Full name is required");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
-    const result = await login(email, password);
+    const result = await signup(fullName.trim(), email.trim(), password);
     setLoading(false);
+
     if (result.error) {
       setError(result.error);
     } else {
       setLocation("/app");
     }
-  };
-
-  const handleGuest = () => {
-    loginAsGuest();
-    setLocation("/app");
   };
 
   return (
@@ -52,16 +64,28 @@ export default function Login() {
 
         <Card className="border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Enter your credentials to access your workspace</CardDescription>
+            <CardTitle className="text-2xl">Create an account</CardTitle>
+            <CardDescription>Sign up to save your work and access it anywhere</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4">
               {error && (
                 <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                   {error}
                 </div>
               )}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Your name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="bg-white/5 border-white/10 focus-visible:ring-primary/50"
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -79,38 +103,39 @@ export default function Login() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Min. 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/5 border-white/10 focus-visible:ring-primary/50"
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Repeat your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="bg-white/5 border-white/10 focus-visible:ring-primary/50"
+                  required
+                />
+              </div>
               <Button type="submit" className="w-full font-medium" disabled={loading}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Account"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-black/40 px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-            <Button variant="outline" type="button" onClick={handleGuest} className="w-full border-white/10 hover:bg-white/5">
-              Continue as Guest
-            </Button>
-            <p className="text-sm text-center text-muted-foreground">
-              Don't have an account?{" "}
+          <CardFooter>
+            <p className="text-sm text-center text-muted-foreground w-full">
+              Already have an account?{" "}
               <button
                 type="button"
-                onClick={() => setLocation("/signup")}
+                onClick={() => setLocation("/")}
                 className="text-primary hover:underline font-medium"
               >
-                Sign Up
+                Sign In
               </button>
             </p>
           </CardFooter>

@@ -3,16 +3,47 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
 }
 
+export interface SignupBody {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginBody {
+  email: string;
+  password: string;
+}
+
+export interface UserProfile {
+  id: number;
+  fullName: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: UserProfile;
+}
+
 export interface Chat {
   id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  guestSessionId?: string | null;
   title: string;
   mode: string;
+  template: string;
+  isSaved: boolean;
+  /** @nullable */
+  shareToken: string | null;
   messageCount: number;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +64,20 @@ export interface ChatWithMessages {
   id: number;
   title: string;
   mode: string;
+  template: string;
+  isSaved: boolean;
+  /** @nullable */
+  shareToken: string | null;
+  /** @nullable */
+  prompt?: string | null;
+  /** @nullable */
+  reportOutput?: string | null;
+  /** @nullable */
+  codeOutput?: string | null;
+  /** @nullable */
+  docsOutput?: string | null;
+  /** @nullable */
+  insightsOutput?: string | null;
   createdAt: string;
   updatedAt: string;
   messages: Message[];
@@ -41,6 +86,8 @@ export interface ChatWithMessages {
 export interface CreateChatBody {
   title: string;
   mode: string;
+  /** @nullable */
+  guestSessionId?: string | null;
 }
 
 export interface UpdateChatBody {
@@ -50,27 +97,40 @@ export interface UpdateChatBody {
 export interface GenerateBody {
   prompt: string;
   mode: string;
+  template?: string;
   /** @nullable */
   chatId?: number | null;
   /** @nullable */
   fileContent?: string | null;
+  /** @nullable */
+  guestSessionId?: string | null;
 }
 
 export interface GenerateResult {
-  content: string;
-  mode: string;
+  report: string;
+  code: string;
+  docs: string;
+  insights: string;
   keywords: string[];
   suggestions: string[];
   /** @nullable */
   messageId: number | null;
   /** @nullable */
   chatId: number | null;
+  title: string;
 }
 
 export interface UploadResult {
   content: string;
   filename: string;
   fileId: number;
+}
+
+export interface FileItem {
+  id: number;
+  filename: string;
+  fileType: string;
+  createdAt: string;
 }
 
 export interface SavedOutput {
@@ -89,6 +149,8 @@ export interface CreateSavedOutputBody {
   mode: string;
   /** @nullable */
   chatId?: number | null;
+  /** @nullable */
+  guestSessionId?: string | null;
 }
 
 export interface ShareLink {
@@ -96,10 +158,22 @@ export interface ShareLink {
   url: string;
 }
 
+export interface ShareLinkItem {
+  id: number;
+  token: string;
+  title: string;
+  mode: string;
+  createdAt: string;
+}
+
 export interface CreateShareBody {
   content: string;
   title: string;
   mode: string;
+  /** @nullable */
+  chatId?: number | null;
+  /** @nullable */
+  guestSessionId?: string | null;
 }
 
 export interface SharedOutput {
@@ -121,8 +195,28 @@ export interface StatsResult {
   modeBreakdown: ModeCount[];
 }
 
+export type ListChatsParams = {
+  guestSessionId?: string;
+};
+
 export type UploadFileBody = {
   file: Blob;
   /** @nullable */
   chatId?: number | null;
+};
+
+export type ListFilesParams = {
+  guestSessionId?: string;
+};
+
+export type ListSavedOutputsParams = {
+  guestSessionId?: string;
+};
+
+export type ListSharedLinksParams = {
+  guestSessionId?: string;
+};
+
+export type GetStatsParams = {
+  guestSessionId?: string;
 };

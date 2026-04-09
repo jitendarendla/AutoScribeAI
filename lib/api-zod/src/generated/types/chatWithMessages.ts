@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { Message } from "./message";
 
@@ -11,6 +11,20 @@ export interface ChatWithMessages {
   id: number;
   title: string;
   mode: string;
+  template: string;
+  isSaved: boolean;
+  /** @nullable */
+  shareToken: string | null;
+  /** @nullable */
+  prompt?: string | null;
+  /** @nullable */
+  reportOutput?: string | null;
+  /** @nullable */
+  codeOutput?: string | null;
+  /** @nullable */
+  docsOutput?: string | null;
+  /** @nullable */
+  insightsOutput?: string | null;
   createdAt: string;
   updatedAt: string;
   messages: Message[];

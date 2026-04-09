@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { db, filesTable } from "@workspace/db";
+import { extractUser } from "../lib/auth-middleware";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -19,12 +20,14 @@ function parseCSV(content: string): string {
 }
 
 router.post("/upload", upload.single("file"), async (req, res): Promise<void> => {
+  const auth = extractUser(req);
+
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;
   }
 
-  const { originalname, buffer, mimetype } = req.file;
+  const { originalname, buffer } = req.file;
   const ext = originalname.toLowerCase().split(".").pop();
 
   if (ext !== "txt" && ext !== "csv") {
@@ -40,13 +43,17 @@ router.post("/upload", upload.single("file"), async (req, res): Promise<void> =>
   content = content.slice(0, 50000);
 
   const chatId = req.body.chatId ? parseInt(req.body.chatId, 10) : null;
+  const guestSessionId = (req.body.guestSessionId as string) ?? null;
 
   const [file] = await db
     .insert(filesTable)
     .values({
       filename: originalname,
+      fileType: ext,
       content,
-      chatId: isNaN(chatId!) ? null : chatId,
+      chatId: chatId && !isNaN(chatId) ? chatId : null,
+      userId: auth?.userId ?? null,
+      guestSessionId: auth ? null : guestSessionId,
     })
     .returning();
 

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 import AppDashboard from "@/pages/app";
 import SharePage from "@/pages/share";
 
@@ -15,6 +16,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Login} />
+      <Route path="/signup" component={Signup} />
       <Route path="/app" component={AppDashboard} />
       <Route path="/share/:token" component={SharePage} />
       <Route component={NotFound} />

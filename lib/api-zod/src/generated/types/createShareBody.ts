@@ -3,11 +3,15 @@
  * Do not edit manually.
  * Api
  * AutoScribe AI+ API specification
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface CreateShareBody {
   content: string;
   title: string;
   mode: string;
+  /** @nullable */
+  chatId?: number | null;
+  /** @nullable */
+  guestSessionId?: string | null;
 }
