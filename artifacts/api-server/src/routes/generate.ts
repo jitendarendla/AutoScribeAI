@@ -98,12 +98,63 @@ Be analytical and actionable.`;
 
 function extractKeywords(text: string): string[] {
   const stopWords = new Set([
-    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
-    "being", "have", "has", "had", "do", "does", "did", "will", "would",
-    "could", "should", "may", "might", "shall", "can", "this", "that",
-    "these", "those", "it", "its", "as", "if", "then", "than", "so",
-    "we", "you", "i", "he", "she", "they", "our", "your", "their", "my",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "shall",
+    "can",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
+    "as",
+    "if",
+    "then",
+    "than",
+    "so",
+    "we",
+    "you",
+    "i",
+    "he",
+    "she",
+    "they",
+    "our",
+    "your",
+    "their",
+    "my",
   ]);
 
   const words = text
@@ -125,8 +176,10 @@ function extractKeywords(text: string): string[] {
 
 function detectTopic(prompt: string): string {
   const p = prompt.toLowerCase();
-  if (p.match(/university|college|institution|school|campus/)) return "Education";
-  if (p.match(/code|program|software|algorithm|function|api/)) return "Technology";
+  if (p.match(/university|college|institution|school|campus/))
+    return "Education";
+  if (p.match(/code|program|software|algorithm|function|api/))
+    return "Technology";
   if (p.match(/experiment|lab|chemistry|physics|biology/)) return "Science";
   if (p.match(/business|market|revenue|startup|company/)) return "Business";
   if (p.match(/health|medical|doctor|patient|disease/)) return "Healthcare";
@@ -167,13 +220,14 @@ async function generateForMode(
   prompt: string,
   mode: string,
   template: string,
-  chatHistory: { role: "user" | "assistant"; content: string }[]
+  chatHistory: { role: "user" | "assistant"; content: string }[],
 ): Promise<string> {
-  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
-    { role: "system", content: getModeSystemPrompt(mode, template) },
-    ...chatHistory.slice(-6),
-    { role: "user", content: prompt },
-  ];
+  const messages: { role: "system" | "user" | "assistant"; content: string }[] =
+    [
+      { role: "system", content: getModeSystemPrompt(mode, template) },
+      ...chatHistory.slice(-6),
+      { role: "user", content: prompt },
+    ];
 
   const completion = await openai.chat.completions.create({
     model: "gpt-5.2",
@@ -230,19 +284,24 @@ router.post("/generate", async (req, res): Promise<void> => {
   const topic = detectTopic(prompt);
   const confidence = 0.75 + Math.random() * 0.2;
 
-  const [reportContent, codeContent, docsContent, insightContent] = await Promise.all([
-    generateForMode(userMessage, "report", template, chatHistory),
-    generateForMode(userMessage, "code", template, chatHistory),
-    generateForMode(userMessage, "documentation", template, chatHistory),
-    generateForMode(userMessage, "insight", template, chatHistory),
-  ]);
+  const [reportContent, codeContent, docsContent, insightContent] =
+    await Promise.all([
+      generateForMode(userMessage, "report", template, chatHistory),
+      generateForMode(userMessage, "code", template, chatHistory),
+      generateForMode(userMessage, "documentation", template, chatHistory),
+      generateForMode(userMessage, "insight", template, chatHistory),
+    ]);
 
   const primaryContent = (() => {
     switch (normalizedMode) {
-      case "code": return codeContent;
-      case "documentation": return docsContent;
-      case "insight": return insightContent;
-      default: return reportContent;
+      case "code":
+        return codeContent;
+      case "documentation":
+        return docsContent;
+      case "insight":
+        return insightContent;
+      default:
+        return reportContent;
     }
   })();
 
@@ -287,7 +346,8 @@ router.post("/generate", async (req, res): Promise<void> => {
       .where(eq(chatsTable.id, resolvedChatId));
   } else {
     const titleWords = prompt.split(" ").slice(0, 6).join(" ");
-    const chatTitle = titleWords.length > 3 ? titleWords : `New ${normalizedMode} chat`;
+    const chatTitle =
+      titleWords.length > 3 ? titleWords : `New ${normalizedMode} chat`;
     const [newChat] = await db
       .insert(chatsTable)
       .values({
@@ -322,7 +382,8 @@ router.post("/generate", async (req, res): Promise<void> => {
   }
 
   const titleWords = prompt.split(" ").slice(0, 6).join(" ");
-  const title = titleWords.length > 3 ? titleWords : `New ${normalizedMode} chat`;
+  const title =
+    titleWords.length > 3 ? titleWords : `New ${normalizedMode} chat`;
 
   res.json({
     report: reportContent,
