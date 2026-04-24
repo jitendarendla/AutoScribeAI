@@ -921,30 +921,26 @@ export default function MergedAppDashboard() {
             {renderSidebarContent()}
           </div>
 
-          {activeSection === "recent" && (
+          {stats && activeSection === "recent" && (
             <div className="border-t border-blue-200/40 dark:border-blue-900/40 p-3">
-              <div className="rounded-md bg-blue-50/70 dark:bg-blue-950/20 p-3 border border-blue-200/40 dark:border-blue-900/40 space-y-2">
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Workspace Summary
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded-md bg-blue-50/70 dark:bg-blue-950/20 p-2 text-center border border-blue-200/40 dark:border-blue-900/40">
+                  <div className="text-muted-foreground">Chats</div>
+                  <div className="text-base font-semibold">
+                    {stats.totalChats}
+                  </div>
                 </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Mode</span>
-                  <span className="font-medium">{currentMode}</span>
+                <div className="rounded-md bg-blue-50/70 dark:bg-blue-950/20 p-2 text-center border border-blue-200/40 dark:border-blue-900/40">
+                  <div className="text-muted-foreground">Saved</div>
+                  <div className="text-base font-semibold">
+                    {stats.totalSaved}
+                  </div>
                 </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Template</span>
-                  <span className="font-medium">
-                    {TEMPLATES.find((t) => t.id === currentTemplate)?.label}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Status</span>
-                  <span className="font-medium">
-                    {generate.isPending ? "Generating..." : "Ready"}
-                  </span>
+                <div className="rounded-md bg-blue-50/70 dark:bg-blue-950/20 p-2 text-center border border-blue-200/40 dark:border-blue-900/40">
+                  <div className="text-muted-foreground">Msgs</div>
+                  <div className="text-base font-semibold">
+                    {stats.totalMessages}
+                  </div>
                 </div>
               </div>
             </div>
