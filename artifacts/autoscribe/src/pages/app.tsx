@@ -293,10 +293,9 @@ export default function MergedAppDashboard() {
     }
   }, [transcript, setTranscript]);
 
-  const listParams = isGuest ? { guestSessionId } : undefined;
+  const listParams = isGuest ? { guestSessionId: guestSessionId ?? undefined } : undefined;
 
-  const { data: chats = [] } = useListChats({
-    params: listParams,
+  const { data: chats = [] } = useListChats(listParams, {
     query: { queryKey: getListChatsQueryKey(listParams) },
   });
 
@@ -307,23 +306,19 @@ export default function MergedAppDashboard() {
     },
   });
 
-  const { data: savedOutputs = [] } = useListSavedOutputs({
-    params: listParams,
+  const { data: savedOutputs = [] } = useListSavedOutputs(listParams, {
     query: { queryKey: getListSavedOutputsQueryKey(listParams) },
   });
 
-  const { data: files = [] } = useListFiles({
-    params: listParams,
+  const { data: files = [] } = useListFiles(listParams, {
     query: { queryKey: getListFilesQueryKey(listParams) },
   });
 
-  const { data: sharedLinks = [] } = useListSharedLinks({
-    params: listParams,
+  const { data: sharedLinks = [] } = useListSharedLinks(listParams, {
     query: { queryKey: getListSharedLinksQueryKey(listParams) },
   });
 
-  const { data: stats } = useGetStats({
-    params: listParams,
+  const { data: stats } = useGetStats(listParams, {
     query: { queryKey: getGetStatsQueryKey(listParams) },
   });
 

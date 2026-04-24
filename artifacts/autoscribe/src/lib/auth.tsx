@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [guestSessionId] = useState<string>(() => getOrCreateGuestId());
 
   useEffect(() => {
-    setAuthTokenGetter(() => token ?? undefined);
+    setAuthTokenGetter(token ? () => token : null);
   }, [token]);
 
   const persistLogin = (newToken: string, newUser: UserProfile) => {
