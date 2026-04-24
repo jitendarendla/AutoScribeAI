@@ -84,7 +84,7 @@ Save / Download / Share
 
 🚀 Installation
 1. Clone Repository
-git clone https://github.com/your-username/autoscribe-ai.git
+git clone https://github.com/jitendarendla/AutoScribeAI.git
 cd autoscribe-ai
 2. Install Dependencies
 npm install
